@@ -60,6 +60,7 @@ void elf_print_header(const Elf64_Ehdr *eh);
 
 int  elf_check_header(const Elf64_Ehdr *eh, size_t len);
 
-void elf_print_sections(const unsigned char *buf, const Elf64_Ehdr *eh);
+void elf_print_sections(const unsigned char *buf, size_t len,
+                        const Elf64_Ehdr *eh);
 
 #endif

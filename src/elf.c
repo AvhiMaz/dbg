@@ -3,6 +3,13 @@
 #include <stdio.h>
 #include <string.h>
 
+static Elf64_Shdr elf_section(const unsigned char *buf, const Elf64_Ehdr *eh,
+                              int i) {
+    Elf64_Shdr sh;
+    memcpy(&sh, buf + eh->e_shoff + i * sizeof(sh), sizeof(sh));
+    return sh;
+}
+
 int elf_has_magic(const unsigned char *buf) {
     return buf[0] == 0x7f && buf[1] == 'E' && buf[2] == 'L' && buf[3] == 'F';
 }
@@ -68,11 +75,31 @@ int elf_check_header(const Elf64_Ehdr *eh, size_t len) {
     return 1;
 }
 
-void elf_print_sections(const unsigned char *buf, const Elf64_Ehdr *eh) {
+void elf_print_sections(const unsigned char *buf, size_t len,
+                        const Elf64_Ehdr *eh) {
+
+    Elf64_Shdr shstrtab = elf_section(buf, eh, eh->e_shstrndx);
+
+    if (shstrtab.sh_offset > len ||
+        shstrtab.sh_size > len - shstrtab.sh_offset) {
+        fprintf(stderr, "error: section name table is outside the file\n");
+        return;
+    }
+
+    const char *names = (const char *)buf + shstrtab.sh_offset;
+
+    if (shstrtab.sh_size == 0 || names[shstrtab.sh_size - 1] != '\0') {
+        fprintf(stderr, "error: section name table is not NUL-terminated\n");
+        return;
+    }
+
     for (int i = 0; i < eh->e_shnum; i++) {
-        Elf64_Shdr sh;
-        memcpy(&sh, buf + eh->e_shoff + i * sizeof(sh), sizeof(sh));
-        printf("[%2d] name=%u type=%u offset=%#lx size=%#lx\n", i, sh.sh_name,
-               sh.sh_type, sh.sh_offset, sh.sh_size);
+        Elf64_Shdr sh = elf_section(buf, eh, i);
+        if (sh.sh_name >= shstrtab.sh_size) {
+            printf("[%2d] <bad name>\n", i);
+            continue;
+        }
+        printf("[%2d] %-16s type=%u offset=%#lx size=%#lx\n", i,
+               names + sh.sh_name, sh.sh_type, sh.sh_offset, sh.sh_size);
     }
 }
