@@ -136,4 +136,27 @@ void elf_print_symbols(const unsigned char *buf, size_t len,
     }
 
     printf("symbols: %lu\n", symtab.sh_size / symtab.sh_entsize);
+
+    if (symtab.sh_link >= eh->e_shnum) {
+        fprintf(stderr, "error: symbol name table index %u out of range\n",
+                symtab.sh_link);
+        return;
+    }
+
+    Elf64_Shdr strtab = elf_section(buf, eh, symtab.sh_link);
+
+    if (strtab.sh_offset > len || strtab.sh_size > len - strtab.sh_offset) {
+        fprintf(stderr, "error: symbol name table is outside the file\n");
+        return;
+    }
+
+    const char *sym_names = (const char *)buf + strtab.sh_offset;
+
+    if (strtab.sh_size == 0 || sym_names[strtab.sh_size - 1] != '\0') {
+        fprintf(stderr, "error: symbol name table is not NUL-terminated\n");
+        return;
+    }
+
+    printf("symbol names: %lu bytes at %#lx\n", strtab.sh_size,
+           strtab.sh_offset);
 }
