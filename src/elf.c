@@ -1,6 +1,7 @@
 #include "elf.h"
 
 #include <stdio.h>
+#include <string.h>
 
 int elf_has_magic(const unsigned char *buf) {
     return buf[0] == 0x7f && buf[1] == 'E' && buf[2] == 'L' && buf[3] == 'F';
@@ -40,7 +41,7 @@ int elf_check_header(const Elf64_Ehdr *eh, size_t len) {
         return 0;
     }
 
-    if (eh->e_shentsize != 64) {
+    if (eh->e_shentsize != sizeof(Elf64_Shdr)) {
         fprintf(stderr, "error: unexpected section header size %u\n",
                 eh->e_shentsize);
         return 0;
@@ -54,4 +55,13 @@ int elf_check_header(const Elf64_Ehdr *eh, size_t len) {
     }
 
     return 1;
+}
+
+void elf_print_sections(const unsigned char *buf, const Elf64_Ehdr *eh) {
+    for (int i = 0; i < eh->e_shnum; i++) {
+        Elf64_Shdr sh;
+        memcpy(&sh, buf + eh->e_shoff + i * sizeof(sh), sizeof(sh));
+        printf("[%2d] name=%u type=%u offset=%#lx size=%#lx\n", i, sh.sh_name,
+               sh.sh_type, sh.sh_offset, sh.sh_size);
+    }
 }

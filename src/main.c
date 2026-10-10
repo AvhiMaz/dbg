@@ -38,6 +38,7 @@ int main(int argc, char **argv) {
     printf("%02x %02x %02x %02x\n", buf[0], buf[1], buf[2], buf[3]);
 
     elf_print_header(&eh);
+    elf_print_sections(buf, &eh);
 
     free(buf);
     return 0;
