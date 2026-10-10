@@ -21,6 +21,7 @@
 
 /// https://codebrowser.dev/linux/include/elf.h.html
 #define SHT_SYMTAB 2
+#define STT_FUNC   2
 
 /// yanked from `:Man elf`
 typedef struct {

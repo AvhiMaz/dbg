@@ -157,6 +157,22 @@ void elf_print_symbols(const unsigned char *buf, size_t len,
         return;
     }
 
-    printf("symbol names: %lu bytes at %#lx\n", strtab.sh_size,
-           strtab.sh_offset);
+    uint64_t count = symtab.sh_size / symtab.sh_entsize;
+
+    for (uint64_t i = 0; i < count; i++) {
+        Elf64_Sym sym;
+        memcpy(&sym, buf + symtab.sh_offset + i * sizeof(sym), sizeof(sym));
+
+        if ((sym.st_info & 0xf) != STT_FUNC) {
+            continue;
+        }
+
+        if (sym.st_name >= strtab.sh_size) {
+            printf("0x%06lx %6lu <bad name>\n", sym.st_value, sym.st_size);
+            continue;
+        }
+
+        printf("0x%06lx %6lu %s\n", sym.st_value, sym.st_size,
+               sym_names + sym.st_name);
+    }
 }
