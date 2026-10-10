@@ -29,6 +29,11 @@ int main(int argc, char **argv) {
 
     memcpy(&eh, buf, sizeof(eh));
 
+    if (!elf_check_header(&eh, len)) {
+        free(buf);
+        return 1;
+    }
+
     printf("size of file: %zu\n", len);
     printf("%02x %02x %02x %02x\n", buf[0], buf[1], buf[2], buf[3]);
 
