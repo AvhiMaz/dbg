@@ -1,21 +1,20 @@
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-int main() {
+unsigned char *read_file(const char *path, size_t *out_len) {
 
-  FILE *file = fopen("/home/archlinux/dev/dbg/program/target/"
-                     "sbpf-solana-solana/release/program.so",
-                     "rb");
+  FILE *file = fopen(path, "rb");
 
   if (file == NULL) {
     perror("fopen failed");
-    return 1;
+    return NULL;
   };
 
   if (fseek(file, 0, SEEK_END)) {
     perror("fseek failed");
     fclose(file);
-    return 1;
+    return NULL;
   };
 
   long sz = ftell(file);
@@ -23,19 +22,23 @@ int main() {
   if (sz < 0) {
     perror("ftell failed");
     fclose(file);
-    return 1;
+    return NULL;
+  }
+
+  if (sz < 64) {
+    fprintf(stderr, "error: file too small to be an ELF\n");
+    fclose(file);
+    return NULL;
   }
 
   rewind(file);
-
-  printf("size of file: %ld\n", sz);
 
   unsigned char *buf = malloc(sz);
 
   if (buf == NULL) {
     perror("malloc failed");
     fclose(file);
-    return 1;
+    return NULL;
   }
 
   size_t n = fread(buf, 1, sz, file);
@@ -44,20 +47,33 @@ int main() {
     fprintf(stderr, "error: failed to read entire file\n");
     free(buf);
     fclose(file);
-    return 1;
+    return NULL;
   }
 
   fclose(file);
 
-  if (n < 4) {
-    fprintf(stderr, "error: file is smaller than 4 bytes\n");
-    free(buf);
+  *out_len = n;
+  return buf;
+}
+
+int main(int argc, char **argv) {
+
+  if (argc < 2) {
+    fprintf(stderr, "usage: %s <file.so>\n", argv[0]);
     return 1;
   }
 
+  size_t len;
+
+  unsigned char *buf = read_file(argv[1], &len);
+
+  if (buf == NULL) {
+    return 1;
+  }
+
+  printf("size of file: %zu\n", len);
   printf("%02x %02x %02x %02x\n", buf[0], buf[1], buf[2], buf[3]);
 
   free(buf);
-
   return 0;
 }
