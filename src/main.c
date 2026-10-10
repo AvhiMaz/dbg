@@ -1,6 +1,7 @@
-#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#include <sys/stat.h>
 
 unsigned char *read_file(const char *path, size_t *out_len) {
 
@@ -11,29 +12,27 @@ unsigned char *read_file(const char *path, size_t *out_len) {
     return NULL;
   };
 
-  if (fseek(file, 0, SEEK_END)) {
-    perror("fseek failed");
-    fclose(file);
-    return NULL;
-  };
+  struct stat st;
 
-  long sz = ftell(file);
-
-  if (sz < 0) {
-    perror("ftell failed");
+  if (fstat(fileno(file), &st) != 0) {
+    perror("fstat failed");
     fclose(file);
     return NULL;
   }
 
-  if (sz < 64) {
+  if (!S_ISREG(st.st_mode)) {
+    fprintf(stderr, "error: %s is not a regular file\n", path);
+    fclose(file);
+    return NULL;
+  }
+
+  if (st.st_size < 64) {
     fprintf(stderr, "error: file too small to be an ELF\n");
     fclose(file);
     return NULL;
   }
 
-  rewind(file);
-
-  unsigned char *buf = malloc(sz);
+  unsigned char *buf = malloc(st.st_size);
 
   if (buf == NULL) {
     perror("malloc failed");
@@ -41,9 +40,9 @@ unsigned char *read_file(const char *path, size_t *out_len) {
     return NULL;
   }
 
-  size_t n = fread(buf, 1, sz, file);
+  size_t n = fread(buf, 1, st.st_size, file);
 
-  if (n != (size_t)sz) {
+  if (n != (size_t)st.st_size) {
     fprintf(stderr, "error: failed to read entire file\n");
     free(buf);
     fclose(file);
@@ -68,6 +67,12 @@ int main(int argc, char **argv) {
   unsigned char *buf = read_file(argv[1], &len);
 
   if (buf == NULL) {
+    return 1;
+  }
+
+  if (buf[0] != 0x7f || buf[1] != 'E' || buf[2] != 'L' || buf[3] != 'F') {
+    fprintf(stderr, "error: %s is not an ELF file\n", argv[1]);
+    free(buf);
     return 1;
   }
 
