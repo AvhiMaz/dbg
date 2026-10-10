@@ -1,13 +1,17 @@
 .PHONY: program build fmt clean
 
+CFLAGS := -Wall -Wextra -g -fsanitize=address,undefined
+SRCS   := $(wildcard src/*.c)
+HDRS   := $(wildcard src/*.h)
+
 program:
 	cd program && cargo build-sbf
 
 build:
-	gcc -Wall -Wextra -g -fsanitize=address,undefined src/main.c -o dbg
+	gcc $(CFLAGS) $(SRCS) -o dbg
 
 fmt:
-	clang-format -i $(wildcard src/*.c src/*.h)
+	clang-format -i $(SRCS) $(HDRS)
 
 clean:
 	rm -f dbg && rm -rf program/target
