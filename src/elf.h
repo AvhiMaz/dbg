@@ -4,6 +4,11 @@
 #include <stddef.h>
 #include <stdint.h>
 
+/// https://github.com/anza-xyz/sbpf/blob/main/src/elf_parser/consts.rs#L18-L19
+/// https://github.com/anza-xyz/sbpf/blob/main/src/elf.rs#L841-L843
+#define EM_BPF      247
+#define EM_SBPF     263
+
 #define EI_NIDENT   16
 
 #define EI_CLASS    4
@@ -12,10 +17,7 @@
 #define ELFCLASS64  2
 #define ELFDATA2LSB 1
 
-/// https://github.com/anza-xyz/sbpf/blob/main/src/elf_parser/consts.rs#L18-L19
-/// https://github.com/anza-xyz/sbpf/blob/main/src/elf.rs#L841-L843
-#define EM_BPF  247
-#define EM_SBPF 263
+#define SHN_UNDEF   0
 
 /// yanked from `:Man elf`
 typedef struct {

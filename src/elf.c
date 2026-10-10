@@ -54,6 +54,17 @@ int elf_check_header(const Elf64_Ehdr *eh, size_t len) {
         return 0;
     }
 
+    if (eh->e_shstrndx == SHN_UNDEF) {
+        fprintf(stderr, "error: file has no section name table\n");
+        return 0;
+    }
+
+    if (eh->e_shstrndx >= eh->e_shnum) {
+        fprintf(stderr, "error: section name table index %u out of range\n",
+                eh->e_shstrndx);
+        return 0;
+    }
+
     return 1;
 }
 
