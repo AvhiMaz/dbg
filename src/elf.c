@@ -103,3 +103,37 @@ void elf_print_sections(const unsigned char *buf, size_t len,
                names + sh.sh_name, sh.sh_type, sh.sh_offset, sh.sh_size);
     }
 }
+
+void elf_print_symbols(const unsigned char *buf, size_t len,
+                       const Elf64_Ehdr *eh) {
+
+    Elf64_Shdr symtab;
+    int        found = 0;
+
+    for (int i = 0; i < eh->e_shnum; i++) {
+        Elf64_Shdr sh = elf_section(buf, eh, i);
+        if (sh.sh_type == SHT_SYMTAB) {
+            symtab = sh;
+            found = 1;
+            break;
+        }
+    }
+
+    if (!found) {
+        printf("no symbol table\n");
+        return;
+    }
+
+    if (symtab.sh_offset > len || symtab.sh_size > len - symtab.sh_offset) {
+        fprintf(stderr, "error: symbol table is outside the file\n");
+        return;
+    }
+
+    if (symtab.sh_entsize != sizeof(Elf64_Sym)) {
+        fprintf(stderr, "error: unexpected symbol size %lu\n",
+                symtab.sh_entsize);
+        return;
+    }
+
+    printf("symbols: %lu\n", symtab.sh_size / symtab.sh_entsize);
+}

@@ -39,6 +39,7 @@ int main(int argc, char **argv) {
 
     elf_print_header(&eh);
     elf_print_sections(buf, len, &eh);
+    elf_print_symbols(buf, len, &eh);
 
     free(buf);
     return 0;

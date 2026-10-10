@@ -19,6 +19,9 @@
 
 #define SHN_UNDEF   0
 
+/// https://codebrowser.dev/linux/include/elf.h.html
+#define SHT_SYMTAB 2
+
 /// yanked from `:Man elf`
 typedef struct {
     uint8_t  e_ident[EI_NIDENT];
@@ -51,8 +54,19 @@ typedef struct {
     uint64_t sh_entsize;
 } Elf64_Shdr;
 
+/// yanked from `:Man elf`
+typedef struct {
+    uint32_t st_name;
+    uint8_t  st_info;
+    uint8_t  st_other;
+    uint16_t st_shndx;
+    uint64_t st_value;
+    uint64_t st_size;
+} Elf64_Sym;
+
 _Static_assert(sizeof(Elf64_Ehdr) == 64, "ELF header must be 64 bytes");
 _Static_assert(sizeof(Elf64_Shdr) == 64, "section header must be 64 bytes");
+_Static_assert(sizeof(Elf64_Sym) == 24, "symbol must be 24 bytes");
 
 int  elf_has_magic(const unsigned char *buf);
 
@@ -62,5 +76,8 @@ int  elf_check_header(const Elf64_Ehdr *eh, size_t len);
 
 void elf_print_sections(const unsigned char *buf, size_t len,
                         const Elf64_Ehdr *eh);
+
+void elf_print_symbols(const unsigned char *buf, size_t len,
+                       const Elf64_Ehdr *eh);
 
 #endif
