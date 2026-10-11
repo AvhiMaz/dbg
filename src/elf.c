@@ -181,3 +181,30 @@ void elf_print_symbols(const unsigned char *buf, size_t len,
                sym_names + sym.st_name);
     }
 }
+
+int elf_find_section(const unsigned char *buf, size_t len, const Elf64_Ehdr *eh,
+                     const char *name, Elf64_Shdr *out) {
+
+    Elf64_Shdr  shstrtab = elf_section(buf, eh, eh->e_shstrndx);
+
+    const char *names = elf_strtab(buf, len, &shstrtab, "section table name");
+
+    if (names == NULL) {
+        return 0;
+    }
+
+    for (int i = 0; i < eh->e_shnum; i++) {
+        Elf64_Shdr sh = elf_section(buf, eh, i);
+
+        if (sh.sh_name >= shstrtab.sh_size) {
+            continue;
+        }
+
+        if (strcmp(names + sh.sh_name, name) == 0) {
+            *out = sh;
+            return 1;
+        }
+    }
+
+    return 0;
+}

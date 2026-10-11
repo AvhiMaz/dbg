@@ -41,6 +41,15 @@ int main(int argc, char **argv) {
     elf_print_sections(buf, len, &eh);
     elf_print_symbols(buf, len, &eh);
 
+    Elf64_Shdr text;
+    if (elf_find_section(buf, len, &eh, ".text", &text)) {
+        printf(".text: offset=%#lx size=%#lx addr=%#lx\n", text.sh_offset,
+               text.sh_size, text.sh_addr);
+
+    } else {
+        printf("no .text section\n");
+    }
+
     free(buf);
     return 0;
 }

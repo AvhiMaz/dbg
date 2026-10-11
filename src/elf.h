@@ -81,4 +81,7 @@ void elf_print_sections(const unsigned char *buf, size_t len,
 void elf_print_symbols(const unsigned char *buf, size_t len,
                        const Elf64_Ehdr *eh);
 
+int elf_find_section(const unsigned char *buf, size_t len, const Elf64_Ehdr *eh,
+                     const char *name, Elf64_Shdr *out);
+
 #endif
