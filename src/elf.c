@@ -10,6 +10,24 @@ static Elf64_Shdr elf_section(const unsigned char *buf, const Elf64_Ehdr *eh,
     return sh;
 }
 
+static const char *elf_strtab(const unsigned char *buf, size_t len,
+                              const Elf64_Shdr *sh, const char *what) {
+
+    if (sh->sh_offset > len || sh->sh_size > len - sh->sh_offset) {
+        fprintf(stderr, "error: %s is outside the file\n", what);
+        return NULL;
+    }
+
+    const char *s = (const char *)buf + sh->sh_offset;
+
+    if (sh->sh_size == 0 || s[sh->sh_size - 1] != '\0') {
+        fprintf(stderr, "error: %s is not NUL-terminated\n", what);
+        return NULL;
+    }
+
+    return s;
+}
+
 int elf_has_magic(const unsigned char *buf) {
     return buf[0] == 0x7f && buf[1] == 'E' && buf[2] == 'L' && buf[3] == 'F';
 }
@@ -78,18 +96,11 @@ int elf_check_header(const Elf64_Ehdr *eh, size_t len) {
 void elf_print_sections(const unsigned char *buf, size_t len,
                         const Elf64_Ehdr *eh) {
 
-    Elf64_Shdr shstrtab = elf_section(buf, eh, eh->e_shstrndx);
+    Elf64_Shdr  shstrtab = elf_section(buf, eh, eh->e_shstrndx);
 
-    if (shstrtab.sh_offset > len ||
-        shstrtab.sh_size > len - shstrtab.sh_offset) {
-        fprintf(stderr, "error: section name table is outside the file\n");
-        return;
-    }
+    const char *names = elf_strtab(buf, len, &shstrtab, "section name table");
 
-    const char *names = (const char *)buf + shstrtab.sh_offset;
-
-    if (shstrtab.sh_size == 0 || names[shstrtab.sh_size - 1] != '\0') {
-        fprintf(stderr, "error: section name table is not NUL-terminated\n");
+    if (names == NULL) {
         return;
     }
 
@@ -143,17 +154,11 @@ void elf_print_symbols(const unsigned char *buf, size_t len,
         return;
     }
 
-    Elf64_Shdr strtab = elf_section(buf, eh, symtab.sh_link);
+    Elf64_Shdr  strtab = elf_section(buf, eh, symtab.sh_link);
 
-    if (strtab.sh_offset > len || strtab.sh_size > len - strtab.sh_offset) {
-        fprintf(stderr, "error: symbol name table is outside the file\n");
-        return;
-    }
+    const char *sym_names = elf_strtab(buf, len, &strtab, "symbol name table");
 
-    const char *sym_names = (const char *)buf + strtab.sh_offset;
-
-    if (strtab.sh_size == 0 || sym_names[strtab.sh_size - 1] != '\0') {
-        fprintf(stderr, "error: symbol name table is not NUL-terminated\n");
+    if (sym_names == NULL) {
         return;
     }
 
