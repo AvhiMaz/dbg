@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "disasm.h"
 #include "elf.h"
 #include "file.h"
 
@@ -40,15 +41,7 @@ int main(int argc, char **argv) {
     elf_print_header(&eh);
     elf_print_sections(buf, len, &eh);
     elf_print_symbols(buf, len, &eh);
-
-    Elf64_Shdr text;
-    if (elf_find_section(buf, len, &eh, ".text", &text)) {
-        printf(".text: offset=%#lx size=%#lx addr=%#lx\n", text.sh_offset,
-               text.sh_size, text.sh_addr);
-
-    } else {
-        printf("no .text section\n");
-    }
+    disasm_print(buf, len, &eh);
 
     free(buf);
     return 0;
