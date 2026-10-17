@@ -12,6 +12,7 @@ fmt:
 
 check: build
 	bash scripts/compare.sh
+	bash scripts/negative.sh
 
 clean:
 	rm -f dbg
