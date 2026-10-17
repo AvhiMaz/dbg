@@ -6,6 +6,8 @@ ROOT=$(cd "$(dirname "$0")/.." && pwd)
 DBG="$ROOT/dbg"
 AWK="gawk -M"
 
+export UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1
+
 PRELOADED_SO_FILES=(
     "../elf/amm.so"
     "../elf/vault.so"

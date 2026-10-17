@@ -110,7 +110,7 @@ static void print_off(int16_t off) {
 
 static void print_signed_hex(int64_t v) {
     if (v < 0) {
-        printf("-0x%lx", (uint64_t)-v);
+        printf("-0x%lx", (uint64_t)0 - (uint64_t)v);
     } else {
         printf("0x%lx", (uint64_t)v);
     }
