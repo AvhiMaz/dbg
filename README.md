@@ -6,6 +6,7 @@
   <a href="https://github.com/AvhiMaz/dbg/actions/workflows/check.yml"><img src="https://github.com/AvhiMaz/dbg/actions/workflows/check.yml/badge.svg" alt="check"></a>
   <img src="https://img.shields.io/badge/language-C11-blue" alt="C11">
   <img src="https://img.shields.io/badge/sBPF-v0%20%7C%20v1-orange" alt="sBPF v0 | v1">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="MIT license"></a>
 </p>
 
 **dbg** reads a compiled Solana program (`.so`) and takes it apart: the ELF
@@ -51,3 +52,7 @@ Built and tested on Arch Linux (`Linux 7.2.3-arch1-3`).
 - [solana-sbpf](https://github.com/anza-xyz/sbpf): the VM and loader the
   validator uses (`ebpf.rs`, `elf.rs`, `disassembler.rs`)
 - `man 5 elf` and `/usr/include/elf.h`: the ELF format
+
+## License
+
+[MIT](LICENSE)
