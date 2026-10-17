@@ -60,6 +60,136 @@ static const char *opc_name(uint8_t opc) {
     return OPC_NAMES[opc] ? OPC_NAMES[opc] : "unknown";
 }
 
+/// https://github.com/anza-xyz/sbpf/blob/dac1fb25ea2a86f386ad6f71c5807e392c7b4692/src/ebpf.rs#L56-L74
+enum {
+    CLS_LD = 0,
+    CLS_LDX = 1,
+    CLS_ST = 2,
+    CLS_STX = 3,
+    CLS_ALU32 = 4,
+    CLS_JMP64 = 5,
+    CLS_JMP32 = 6,
+    CLS_ALU64 = 7,
+};
+
+enum {
+    OPC_NEG32 = 0x84,
+    OPC_NEG64 = 0x87,
+    OPC_LE = 0xd4,
+    OPC_BE = 0xdc,
+    OPC_JA = 0x05,
+    OPC_CALL = 0x85,
+    OPC_CALLX = 0x8d,
+    OPC_EXIT = 0x95,
+};
+
+static int is_byteswap(uint8_t opc) {
+    return opc == OPC_LE || opc == OPC_BE;
+}
+
+static void print_name(const Insn *in) {
+    char name[16];
+
+    if (is_byteswap(in->opc)) {
+        snprintf(name, sizeof name, "%s%ld", opc_name(in->opc), in->imm);
+    } else {
+        snprintf(name, sizeof name, "%s", opc_name(in->opc));
+    }
+
+    printf("%-7s", name);
+}
+
+static void print_off(int16_t off) {
+    if (off < 0) {
+        printf("-0x%x", -off);
+    } else {
+        printf("+0x%x", off);
+    }
+}
+
+static void print_signed_hex(int64_t v) {
+    if (v < 0) {
+        printf("-0x%lx", (uint64_t)-v);
+    } else {
+        printf("0x%lx", (uint64_t)v);
+    }
+}
+
+static void print_operands(const Insn *in) {
+    uint8_t cls = in->opc & 0x07;
+    int     uses_reg = in->opc & 0x08;
+
+    switch (in->opc) {
+    case OPC_NEG32:
+    case OPC_NEG64:
+    case OPC_LE:
+    case OPC_BE:
+        printf("r%u", in->dst);
+        return;
+    case OPC_JA:
+        print_off(in->off);
+        return;
+
+    case OPC_CALL:
+        print_signed_hex(in->imm);
+        return;
+
+    case OPC_CALLX:
+        printf("r%ld", in->imm);
+        return;
+
+    case OPC_EXIT:
+        return;
+    }
+
+    switch (cls) {
+    case CLS_LD:
+        printf("r%u, 0x%lx", in->dst, (uint64_t)in->imm);
+        break;
+
+    case CLS_LDX:
+        printf("r%u, [r%u", in->dst, in->src);
+        print_off(in->off);
+        printf("]");
+        break;
+
+    case CLS_ST:
+        printf("[r%u", in->dst);
+        print_off(in->off);
+        printf("], %ld", in->imm);
+        break;
+
+    case CLS_STX:
+        printf("[r%u", in->dst);
+        print_off(in->off);
+        printf("], r%u", in->src);
+        break;
+
+    case CLS_ALU32:
+    case CLS_ALU64:
+        if (uses_reg) {
+            printf("r%u, r%u", in->dst, in->src);
+        } else {
+            printf("r%u, %ld", in->dst, in->imm);
+        }
+        break;
+
+    case CLS_JMP64:
+        if (uses_reg) {
+            printf("r%u, r%u, ", in->dst, in->src);
+        } else {
+            printf("r%u, %ld, ", in->dst, in->imm);
+        }
+        print_off(in->off);
+        break;
+
+    case CLS_JMP32:
+    default:
+        printf("...");
+        break;
+    }
+}
+
 void disasm_print(const unsigned char *buf, size_t len, const Elf64_Ehdr *eh) {
 
     Elf64_Shdr text;
@@ -85,8 +215,10 @@ void disasm_print(const unsigned char *buf, size_t len, const Elf64_Ehdr *eh) {
 
         Insn in = decode(code + off, off / INSN_SIZE);
 
-        printf(" %-7s ptr=%lu opc=%02x dst=r%u src=r%u off=%d imm=%ld\n",
-               opc_name(in.opc), in.ptr, in.opc, in.dst, in.src, in.off,
-               in.imm);
+        printf(" ");
+        print_name(&in);
+        printf(" ");
+        print_operands(&in);
+        printf("\n");
     }
 }
