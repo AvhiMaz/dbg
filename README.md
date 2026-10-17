@@ -35,3 +35,7 @@ Built and tested on Arch Linux (`Linux 7.2.3-arch1-3`).
 - [solana-sbpf](https://github.com/anza-xyz/sbpf): the VM and loader the
   validator uses (`ebpf.rs`, `elf.rs`, `disassembler.rs`)
 - `man 5 elf` and `/usr/include/elf.h`: the ELF format
+
+## License
+
+[MIT](LICENSE)
