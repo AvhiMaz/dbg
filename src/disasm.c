@@ -187,7 +187,7 @@ static void print_operands(const Insn *in) {
 
     case CLS_JMP32:
     default:
-        printf("...");
+        printf("opcode=0x%02x", in->opc);
         break;
     }
 }

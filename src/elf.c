@@ -67,9 +67,14 @@ int elf_check_header(const Elf64_Ehdr *eh, size_t len) {
     }
 
     if (eh->e_flags > 1) {
-        fprintf(stderr,
-                "error: sBPF v%u is not supported yet (only v0 and v1)\n",
-                eh->e_flags);
+        if (eh->e_flags <= 4) {
+            fprintf(stderr,
+                    "error: sBPF v%u is not supported yet (only v0 and v1)\n",
+                    eh->e_flags);
+        } else {
+            fprintf(stderr, "error: unknown sBPF version (e_flags = 0x%x)\n",
+                    eh->e_flags);
+        }
         return 0;
     }
 
