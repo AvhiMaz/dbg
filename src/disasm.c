@@ -81,6 +81,7 @@ enum {
     OPC_CALL = 0x85,
     OPC_CALLX = 0x8d,
     OPC_EXIT = 0x95,
+    OPC_LDDW = 0x18,
 };
 
 static int is_byteswap(uint8_t opc) {
@@ -144,7 +145,8 @@ static void print_operands(const Insn *in) {
 
     switch (cls) {
     case CLS_LD:
-        printf("r%u, 0x%lx", in->dst, (uint64_t)in->imm);
+        printf("r%u, ", in->dst);
+        print_signed_hex(in->imm);
         break;
 
     case CLS_LDX:
@@ -190,6 +192,13 @@ static void print_operands(const Insn *in) {
     }
 }
 
+static int64_t lddw_value(const Insn *lo, const Insn *hi) {
+    uint64_t low = (uint32_t)lo->imm;
+    uint64_t high = (uint32_t)hi->imm;
+
+    return (int64_t)(low | (high << 32));
+}
+
 void disasm_print(const unsigned char *buf, size_t len, const Elf64_Ehdr *eh) {
 
     Elf64_Shdr text;
@@ -214,11 +223,25 @@ void disasm_print(const unsigned char *buf, size_t len, const Elf64_Ehdr *eh) {
         }
 
         Insn in = decode(code + off, off / INSN_SIZE);
+        int  truncated = 0;
+
+        if (in.opc == OPC_LDDW) {
+            if (off + 2 * INSN_SIZE <= text.sh_size) {
+                Insn hi = decode(code + off + INSN_SIZE, off / INSN_SIZE + 1);
+                in.imm = lddw_value(&in, &hi);
+                off += INSN_SIZE;
+            } else {
+                truncated = 1;
+            }
+        }
 
         printf(" ");
         print_name(&in);
         printf(" ");
         print_operands(&in);
+        if (truncated) {
+            printf("  <missing second slot>");
+        }
         printf("\n");
     }
 }
