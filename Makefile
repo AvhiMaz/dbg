@@ -1,4 +1,4 @@
-.PHONY: build fmt clean
+.PHONY: build fmt check clean
 
 CFLAGS := -Wall -Wextra -g -fsanitize=address,undefined
 SRCS   := $(wildcard src/*.c)
@@ -9,6 +9,9 @@ build:
 
 fmt:
 	clang-format -i $(SRCS) $(HDRS)
+
+check: build
+	bash scripts/compare.sh
 
 clean:
 	rm -f dbg
