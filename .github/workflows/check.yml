@@ -1,0 +1,37 @@
+name: check
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+env:
+  PLATFORM_TOOLS: v1.54
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tools
+        run: sudo apt-get update && sudo apt-get install -y gawk
+
+      - name: Cache Solana llvm-objdump
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/sbf
+          key: llvm-objdump-platform-tools-${{ env.PLATFORM_TOOLS }}-linux-x86_64
+
+      - name: Download Solana llvm-objdump
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/.local/sbf
+          curl -sSfL "https://github.com/anza-xyz/platform-tools/releases/download/$PLATFORM_TOOLS/platform-tools-linux-x86_64.tar.bz2" \
+            | tar -xj -C ~/.local/sbf --strip-components=3 --occurrence=1 ./llvm/bin/llvm-objdump || true
+          test -x ~/.local/sbf/llvm-objdump
+          ~/.local/sbf/llvm-objdump --version | head -2
+
+      - name: make check
+        run: OBJDUMP="$HOME/.local/sbf/llvm-objdump" make check
