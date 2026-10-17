@@ -147,7 +147,8 @@ check_file() {
     : > "$problems"
 
     if ! timeout 30 "$DBG" "$so" > "$out" 2> "$TMP/dbg.err"; then
-        echo "dbg failed: $(head -1 "$TMP/dbg.err")" >> "$problems"
+        echo "FAIL ${so#"$ROOT"/}  (dbg: $(head -1 "$TMP/dbg.err"))"
+        return 1
     fi
 
     if ! diff <(header_dbg "$out") <(header_readelf "$so") > "$TMP/d"; then

@@ -66,6 +66,13 @@ int elf_check_header(const Elf64_Ehdr *eh, size_t len) {
         return 0;
     }
 
+    if (eh->e_flags > 1) {
+        fprintf(stderr,
+                "error: sBPF v%u is not supported yet (only v0 and v1)\n",
+                eh->e_flags);
+        return 0;
+    }
+
     if (eh->e_shentsize != sizeof(Elf64_Shdr)) {
         fprintf(stderr, "error: unexpected section header size %u\n",
                 eh->e_shentsize);
