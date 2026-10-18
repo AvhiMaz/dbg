@@ -42,7 +42,7 @@ if [ ${#FILES[@]} -eq 0 ]; then
 fi
 
 if [ ! -x "$DBG" ]; then
-    echo "error: $DBG not found; run 'make build' first" >&2
+    echo "error: $DBG not found; run './nob' first" >&2
     exit 2
 fi
 

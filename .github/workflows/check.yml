@@ -33,5 +33,5 @@ jobs:
           test -x ~/.local/sbf/llvm-objdump
           ~/.local/sbf/llvm-objdump --version | head -2
 
-      - name: make check
-        run: OBJDUMP="$HOME/.local/sbf/llvm-objdump" make check
+      - name: nob check
+        run: cc -o nob nob.c && OBJDUMP="$HOME/.local/sbf/llvm-objdump" ./nob check

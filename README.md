@@ -24,9 +24,19 @@ for instruction.
 sBPF v2 and later are rejected with a clear error for now: v2 moved loads
 and stores to other opcodes, so v0 decoding would print wrong instructions.
 
+## Build
+
+```zsh
+cc -o nob nob.c
+./nob
+```
+
+`./nob` builds `dbg`, and rebuilds itself first whenever `nob.c` changes.
+The other targets are `./nob check`, `./nob fmt` and `./nob clean`.
+
 Built and tested on Arch Linux (`Linux 7.2.3-arch1-3`).
 
-`make check` compares every instruction with Solana's `llvm-objdump`.
+`./nob check` compares every instruction with Solana's `llvm-objdump`.
 
 ## References
 
@@ -35,6 +45,7 @@ Built and tested on Arch Linux (`Linux 7.2.3-arch1-3`).
 - [solana-sbpf](https://github.com/anza-xyz/sbpf): the VM and loader the
   validator uses (`ebpf.rs`, `elf.rs`, `disassembler.rs`)
 - `man 5 elf` and `/usr/include/elf.h`: the ELF format
+- [nob.h](https://github.com/tsoding/nob.h) by Tsoding
 
 ## License
 
