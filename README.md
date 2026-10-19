@@ -46,6 +46,7 @@ Built and tested on Arch Linux (`Linux 7.2.3-arch1-3`).
   validator uses (`ebpf.rs`, `elf.rs`, `disassembler.rs`)
 - `man 5 elf` and `/usr/include/elf.h`: the ELF format
 - [nob.h](https://github.com/tsoding/nob.h) by Tsoding
+- [termbox2](https://github.com/termbox/termbox2) by Adam Saponara
 
 ## License
 

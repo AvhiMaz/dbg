@@ -5,12 +5,17 @@
 #include "disasm.h"
 #include "elf.h"
 #include "file.h"
+#include "tui.h"
 
 int main(int argc, char **argv) {
 
     if (argc < 2) {
         fprintf(stderr, "usage: %s <file.so>\n", argv[0]);
         return 1;
+    }
+
+    if (strcmp(argv[1], "-t") == 0) {
+        return tui_run();
     }
 
     size_t         len;
