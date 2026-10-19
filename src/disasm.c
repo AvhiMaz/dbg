@@ -88,7 +88,7 @@ static int is_byteswap(uint8_t opc) {
     return opc == OPC_LE || opc == OPC_BE;
 }
 
-static void print_name(const Insn *in) {
+static void print_name(FILE *out, const Insn *in) {
     char name[16];
 
     if (is_byteswap(in->opc)) {
@@ -97,26 +97,26 @@ static void print_name(const Insn *in) {
         snprintf(name, sizeof name, "%s", opc_name(in->opc));
     }
 
-    printf("%-7s", name);
+    fprintf(out, "%-7s", name);
 }
 
-static void print_off(int16_t off) {
+static void print_off(FILE *out, int16_t off) {
     if (off < 0) {
-        printf("-0x%x", -off);
+        fprintf(out, "-0x%x", -off);
     } else {
-        printf("+0x%x", off);
+        fprintf(out, "+0x%x", off);
     }
 }
 
-static void print_signed_hex(int64_t v) {
+static void print_signed_hex(FILE *out, int64_t v) {
     if (v < 0) {
-        printf("-0x%lx", (uint64_t)0 - (uint64_t)v);
+        fprintf(out, "-0x%lx", (uint64_t)0 - (uint64_t)v);
     } else {
-        printf("0x%lx", (uint64_t)v);
+        fprintf(out, "0x%lx", (uint64_t)v);
     }
 }
 
-static void print_operands(const Insn *in) {
+static void print_operands(FILE *out, const Insn *in) {
     uint8_t cls = in->opc & 0x07;
     int     uses_reg = in->opc & 0x08;
 
@@ -125,18 +125,18 @@ static void print_operands(const Insn *in) {
     case OPC_NEG64:
     case OPC_LE:
     case OPC_BE:
-        printf("r%u", in->dst);
+        fprintf(out, "r%u", in->dst);
         return;
     case OPC_JA:
-        print_off(in->off);
+        print_off(out, in->off);
         return;
 
     case OPC_CALL:
-        print_signed_hex(in->imm);
+        print_signed_hex(out, in->imm);
         return;
 
     case OPC_CALLX:
-        printf("r%ld", in->imm);
+        fprintf(out, "r%ld", in->imm);
         return;
 
     case OPC_EXIT:
@@ -145,49 +145,49 @@ static void print_operands(const Insn *in) {
 
     switch (cls) {
     case CLS_LD:
-        printf("r%u, ", in->dst);
-        print_signed_hex(in->imm);
+        fprintf(out, "r%u, ", in->dst);
+        print_signed_hex(out, in->imm);
         break;
 
     case CLS_LDX:
-        printf("r%u, [r%u", in->dst, in->src);
-        print_off(in->off);
-        printf("]");
+        fprintf(out, "r%u, [r%u", in->dst, in->src);
+        print_off(out, in->off);
+        fprintf(out, "]");
         break;
 
     case CLS_ST:
-        printf("[r%u", in->dst);
-        print_off(in->off);
-        printf("], %ld", in->imm);
+        fprintf(out, "[r%u", in->dst);
+        print_off(out, in->off);
+        fprintf(out, "], %ld", in->imm);
         break;
 
     case CLS_STX:
-        printf("[r%u", in->dst);
-        print_off(in->off);
-        printf("], r%u", in->src);
+        fprintf(out, "[r%u", in->dst);
+        print_off(out, in->off);
+        fprintf(out, "], r%u", in->src);
         break;
 
     case CLS_ALU32:
     case CLS_ALU64:
         if (uses_reg) {
-            printf("r%u, r%u", in->dst, in->src);
+            fprintf(out, "r%u, r%u", in->dst, in->src);
         } else {
-            printf("r%u, %ld", in->dst, in->imm);
+            fprintf(out, "r%u, %ld", in->dst, in->imm);
         }
         break;
 
     case CLS_JMP64:
         if (uses_reg) {
-            printf("r%u, r%u, ", in->dst, in->src);
+            fprintf(out, "r%u, r%u, ", in->dst, in->src);
         } else {
-            printf("r%u, %ld, ", in->dst, in->imm);
+            fprintf(out, "r%u, %ld, ", in->dst, in->imm);
         }
-        print_off(in->off);
+        print_off(out, in->off);
         break;
 
     case CLS_JMP32:
     default:
-        printf("opcode=0x%02x", in->opc);
+        fprintf(out, "opcode=0x%02x", in->opc);
         break;
     }
 }
@@ -199,12 +199,13 @@ static int64_t lddw_value(const Insn *lo, const Insn *hi) {
     return (int64_t)(low | (high << 32));
 }
 
-void disasm_print(const unsigned char *buf, size_t len, const Elf64_Ehdr *eh) {
+void disasm_print(FILE *out, const unsigned char *buf, size_t len,
+                  const Elf64_Ehdr *eh) {
 
     Elf64_Shdr text;
 
     if (!elf_find_section(buf, len, eh, ".text", &text)) {
-        printf("no .text section\n");
+        fprintf(out, "no .text section\n");
         return;
     }
 
@@ -216,10 +217,10 @@ void disasm_print(const unsigned char *buf, size_t len, const Elf64_Ehdr *eh) {
     const unsigned char *code = buf + text.sh_offset;
 
     for (uint64_t off = 0; off + INSN_SIZE <= text.sh_size; off += INSN_SIZE) {
-        printf("%6lx: ", text.sh_addr + off);
+        fprintf(out, "%6lx: ", text.sh_addr + off);
 
         for (int b = 0; b < INSN_SIZE; b++) {
-            printf("%02x ", code[off + b]);
+            fprintf(out, "%02x ", code[off + b]);
         }
 
         Insn in = decode(code + off, off / INSN_SIZE);
@@ -235,13 +236,13 @@ void disasm_print(const unsigned char *buf, size_t len, const Elf64_Ehdr *eh) {
             }
         }
 
-        printf(" ");
-        print_name(&in);
-        printf(" ");
-        print_operands(&in);
+        fprintf(out, " ");
+        print_name(out, &in);
+        fprintf(out, " ");
+        print_operands(out, &in);
         if (truncated) {
-            printf("  <missing second slot>");
+            fprintf(out, "  <missing second slot>");
         }
-        printf("\n");
+        fprintf(out, "\n");
     }
 }

@@ -1,6 +1,8 @@
 #ifndef DISASM_H
 #define DISASM_H
 
+#include <stdio.h>
+
 #include "elf.h"
 
 #define INSN_SIZE 8
@@ -15,6 +17,7 @@ typedef struct {
     int64_t  imm;
 } Insn;
 
-void disasm_print(const unsigned char *buf, size_t len, const Elf64_Ehdr *eh);
+void disasm_print(FILE *out, const unsigned char *buf, size_t len,
+                  const Elf64_Ehdr *eh);
 
 #endif

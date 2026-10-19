@@ -148,7 +148,7 @@ check_file() {
     local so=$1 out=$TMP/dbg.out problems=$TMP/problems
     : > "$problems"
 
-    if ! timeout 30 "$DBG" "$so" > "$out" 2> "$TMP/dbg.err"; then
+    if ! timeout 30 "$DBG" -p "$so" > "$out" 2> "$TMP/dbg.err"; then
         echo "FAIL ${so#"$ROOT"/}  (dbg: $(head -1 "$TMP/dbg.err"))"
         return 1
     fi

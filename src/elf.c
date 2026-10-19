@@ -32,20 +32,20 @@ int elf_has_magic(const unsigned char *buf) {
     return buf[0] == 0x7f && buf[1] == 'E' && buf[2] == 'L' && buf[3] == 'F';
 }
 
-void elf_print_header(const Elf64_Ehdr *eh) {
-    printf("type:       %u\n", eh->e_type);
-    printf("machine:    %u\n", eh->e_machine);
-    printf("version:    %u\n", eh->e_version);
-    printf("entry:      %#lx\n", eh->e_entry);
-    printf("phoff:      %#lx\n", eh->e_phoff);
-    printf("shoff:      %lu\n", eh->e_shoff);
-    printf("flags:      %u\n", eh->e_flags);
-    printf("ehsize:     %u\n", eh->e_ehsize);
-    printf("phentsize:  %u\n", eh->e_phentsize);
-    printf("phnum:      %u\n", eh->e_phnum);
-    printf("shentsize:  %u\n", eh->e_shentsize);
-    printf("shnum:      %u\n", eh->e_shnum);
-    printf("shstrndx:   %u\n", eh->e_shstrndx);
+void elf_print_header(FILE *out, const Elf64_Ehdr *eh) {
+    fprintf(out, "type:       %u\n", eh->e_type);
+    fprintf(out, "machine:    %u\n", eh->e_machine);
+    fprintf(out, "version:    %u\n", eh->e_version);
+    fprintf(out, "entry:      %#lx\n", eh->e_entry);
+    fprintf(out, "phoff:      %#lx\n", eh->e_phoff);
+    fprintf(out, "shoff:      %lu\n", eh->e_shoff);
+    fprintf(out, "flags:      %u\n", eh->e_flags);
+    fprintf(out, "ehsize:     %u\n", eh->e_ehsize);
+    fprintf(out, "phentsize:  %u\n", eh->e_phentsize);
+    fprintf(out, "phnum:      %u\n", eh->e_phnum);
+    fprintf(out, "shentsize:  %u\n", eh->e_shentsize);
+    fprintf(out, "shnum:      %u\n", eh->e_shnum);
+    fprintf(out, "shstrndx:   %u\n", eh->e_shstrndx);
 }
 
 int elf_check_header(const Elf64_Ehdr *eh, size_t len) {
@@ -105,7 +105,7 @@ int elf_check_header(const Elf64_Ehdr *eh, size_t len) {
     return 1;
 }
 
-void elf_print_sections(const unsigned char *buf, size_t len,
+void elf_print_sections(FILE *out, const unsigned char *buf, size_t len,
                         const Elf64_Ehdr *eh) {
 
     Elf64_Shdr  shstrtab = elf_section(buf, eh, eh->e_shstrndx);
@@ -119,15 +119,15 @@ void elf_print_sections(const unsigned char *buf, size_t len,
     for (int i = 0; i < eh->e_shnum; i++) {
         Elf64_Shdr sh = elf_section(buf, eh, i);
         if (sh.sh_name >= shstrtab.sh_size) {
-            printf("[%2d] <bad name>\n", i);
+            fprintf(out, "[%2d] <bad name>\n", i);
             continue;
         }
-        printf("[%2d] %-16s type=%u offset=%#lx size=%#lx\n", i,
-               names + sh.sh_name, sh.sh_type, sh.sh_offset, sh.sh_size);
+        fprintf(out, "[%2d] %-16s type=%u offset=%#lx size=%#lx\n", i,
+                names + sh.sh_name, sh.sh_type, sh.sh_offset, sh.sh_size);
     }
 }
 
-void elf_print_symbols(const unsigned char *buf, size_t len,
+void elf_print_symbols(FILE *out, const unsigned char *buf, size_t len,
                        const Elf64_Ehdr *eh) {
 
     Elf64_Shdr symtab;
@@ -143,7 +143,7 @@ void elf_print_symbols(const unsigned char *buf, size_t len,
     }
 
     if (!found) {
-        printf("no symbol table\n");
+        fprintf(out, "no symbol table\n");
         return;
     }
 
@@ -158,7 +158,7 @@ void elf_print_symbols(const unsigned char *buf, size_t len,
         return;
     }
 
-    printf("symbols: %lu\n", symtab.sh_size / symtab.sh_entsize);
+    fprintf(out, "symbols: %lu\n", symtab.sh_size / symtab.sh_entsize);
 
     if (symtab.sh_link >= eh->e_shnum) {
         fprintf(stderr, "error: symbol name table index %u out of range\n",
@@ -185,12 +185,13 @@ void elf_print_symbols(const unsigned char *buf, size_t len,
         }
 
         if (sym.st_name >= strtab.sh_size) {
-            printf("0x%06lx %6lu <bad name>\n", sym.st_value, sym.st_size);
+            fprintf(out, "0x%06lx %6lu <bad name>\n", sym.st_value,
+                    sym.st_size);
             continue;
         }
 
-        printf("0x%06lx %6lu %s\n", sym.st_value, sym.st_size,
-               sym_names + sym.st_name);
+        fprintf(out, "0x%06lx %6lu %s\n", sym.st_value, sym.st_size,
+                sym_names + sym.st_name);
     }
 }
 

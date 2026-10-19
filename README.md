@@ -1,5 +1,9 @@
 # dbg
 
+<p align="center">
+  <img src="assets/screenshot.png" alt="screenshot">
+</p>
+
 **dbg** reads a compiled Solana program (`.so`) and takes it apart: the ELF
 header, every section, the symbol table, and every sBPF instruction. It is
 written from scratch in C, with no libraries beyond libc, as a way to learn
@@ -37,6 +41,16 @@ The other targets are `./nob check`, `./nob fmt` and `./nob clean`.
 Built and tested on Arch Linux (`Linux 7.2.3-arch1-3`).
 
 `./nob check` compares every instruction with Solana's `llvm-objdump`.
+
+## Usage
+
+```zsh
+./dbg elf/vault.so
+./dbg -p elf/vault.so
+```
+
+`./dbg file.so` opens the TUI. `-p` prints everything as plain text instead,
+which is what `./nob check` reads.
 
 ## References
 

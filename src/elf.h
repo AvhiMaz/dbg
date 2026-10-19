@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 
 /// https://github.com/anza-xyz/sbpf/blob/main/src/elf_parser/consts.rs#L18-L19
 /// https://github.com/anza-xyz/sbpf/blob/main/src/elf.rs#L841-L843
@@ -71,14 +72,14 @@ _Static_assert(sizeof(Elf64_Sym) == 24, "symbol must be 24 bytes");
 
 int  elf_has_magic(const unsigned char *buf);
 
-void elf_print_header(const Elf64_Ehdr *eh);
+void elf_print_header(FILE *out, const Elf64_Ehdr *eh);
 
 int  elf_check_header(const Elf64_Ehdr *eh, size_t len);
 
-void elf_print_sections(const unsigned char *buf, size_t len,
+void elf_print_sections(FILE *out, const unsigned char *buf, size_t len,
                         const Elf64_Ehdr *eh);
 
-void elf_print_symbols(const unsigned char *buf, size_t len,
+void elf_print_symbols(FILE *out, const unsigned char *buf, size_t len,
                        const Elf64_Ehdr *eh);
 
 int elf_find_section(const unsigned char *buf, size_t len, const Elf64_Ehdr *eh,

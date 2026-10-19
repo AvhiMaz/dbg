@@ -23,7 +23,7 @@ patch() {
 
 expect() {
     local name=$1 want_rc=$2 want_text=$3 out rc
-    out=$(timeout 10 "$DBG" "$TMP/bad.so" 2>&1)
+    out=$(timeout 10 "$DBG" -p "$TMP/bad.so" 2>&1)
     rc=$?
     if [ "$rc" -eq "$want_rc" ] && grep -qF -- "$want_text" <<< "$out"; then
         echo "ok   $name"
